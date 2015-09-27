@@ -12,17 +12,17 @@ import android.view.ViewGroup;
 /**
  * Created by xujifa on 2015/9/27.
  */
-public class SliderLayout extends ViewGroup {
+public class Continuousslider extends ViewGroup {
     Line line;
     Circle circle;
-    public SliderLayout(Context context) {
+    public Continuousslider(Context context) {
         super(context);
         init();
     }
 
 
 
-    public SliderLayout(Context context, AttributeSet attrs) {
+    public Continuousslider(Context context, AttributeSet attrs) {
         super(context, attrs);
         init();
     }
