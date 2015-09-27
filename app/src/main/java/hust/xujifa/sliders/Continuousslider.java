@@ -133,7 +133,7 @@ public class Continuousslider extends ViewGroup {
             paint.setStyle(Paint.Style.FILL);
             x=getLeft()+20;
             radius=15;
-            radius=15;
+            radius2=15;
             animator=new ValueAnimator();
         }
         @Override
