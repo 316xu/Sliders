@@ -1,13 +1,18 @@
 package hust.xujifa.sliders;
 
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
+import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AnimationUtils;
 
 /**
  * Created by xujifa on 2015/9/27.
@@ -19,43 +24,25 @@ public class Continuousslider extends ViewGroup {
         super(context);
         init();
     }
-
-
-
     public Continuousslider(Context context, AttributeSet attrs) {
         super(context, attrs);
         init();
     }
-
-
     void init(){
         line=new Line(getContext());
         circle=new Circle(getContext());
         addView(line);
         addView(circle);
-
     }
-
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        Log.d("AAA","w"+w+"h"+h+"ow"+oldw+"oh"+oldh);
-
         float xpad = (float) (getPaddingLeft() + getPaddingRight());
         float ypad = (float) (getPaddingTop() + getPaddingBottom());
-
-        // Account for the label
-
         float ww = (float) w - xpad;
         float hh = (float) h - ypad;
-
-        // Figure out how big we can make the pie.
-        float diameter = Math.min(ww, hh);
-
-        int center=(int)(hh/2.0);
         circle.layout(0, 0, (int) ww, (int) hh);
         line.layout(0, 0, (int) ww, (int) hh);
-
     }
 
     @Override
@@ -64,18 +51,23 @@ public class Continuousslider extends ViewGroup {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        Log.d("AAA",event.toString());
-        if(event.getAction()==MotionEvent.ACTION_MOVE||event.getAction()==MotionEvent.ACTION_UP||
-                event.getAction()==MotionEvent.ACTION_DOWN
-                ){
-            moveto(event.getX());
-
-            return true;
+        switch (event.getAction()){
+            case MotionEvent.ACTION_DOWN:
+                circle.scalel();
+                circle.startAnimation(200);
+                moveto(event.getX());
+                return true;
+            case MotionEvent.ACTION_UP:
+                circle.scales();
+                circle.startAnimation(200);
+                moveto(event.getX());
+                return true;
+            case MotionEvent.ACTION_MOVE:
+                moveto(event.getX());
+                return true;
         }
         return false;
     }
-
-
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
@@ -95,33 +87,34 @@ public class Continuousslider extends ViewGroup {
             paint1=new Paint();
             paint2=new Paint();
             paint1.setColor(getResources().getColor(R.color.gray));
+            paint1.setAlpha(80);
+            paint2.setAlpha(80);
             paint2.setColor(getResources().getColor(R.color.blue));
             paint1.setStyle(Paint.Style.FILL);
             paint2.setStyle(Paint.Style.FILL);
-            x=getLeft()+30;
+            x=getLeft()+55;
         }
-
         public void moveto(float x){
             this.x=x;
             invalidate();
         }
-
-
         @Override
         protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
-            Log.d("AAA", "line" + x);
-            if(x<=getLeft()+30)x=getLeft()+30;
-            if(x>getRight()-10)x=getRight()-10;
-            canvas.drawRect(getLeft() + 30, (getTop()+getBottom())/2-3, x,(getTop()+getBottom())/2+3, paint2);
-            canvas.drawRect(x, (getTop()+getBottom())/2-3, getRight() - 30,(getTop()+getBottom())/2+3, paint1);
+            if(x<=getLeft()+55)x=getLeft()+55;
+            if(x>getRight()-55)x=getRight()-55;
+            canvas.drawRect(getLeft() + 55, (getTop()+getBottom())/2-3, x,(getTop()+getBottom())/2+3, paint2);
+            canvas.drawRect(x, (getTop()+getBottom())/2-3, getRight() - 55,(getTop()+getBottom())/2+3, paint1);
         }
-
     }
-
-    class Circle extends View {
+    class Circle extends View implements ValueAnimator.AnimatorUpdateListener{
         Paint paint;
+        Paint bg;
         float x;
+        int radius;
+        int radius2;
+        boolean temp;
+        ValueAnimator animator;
         public void moveto(float x){
             this.x=x;
             invalidate();
@@ -131,25 +124,66 @@ public class Continuousslider extends ViewGroup {
             super(context);
             paint=new Paint();
             paint.setColor(getResources().getColor(R.color.blue));
+            bg=new Paint();
+
+            bg.setStyle(Paint.Style.FILL);
+            bg.setColor(getResources().getColor(R.color.blue));
+            bg.setAlpha(26);
+
             paint.setStyle(Paint.Style.FILL);
             x=getLeft()+20;
+            radius=15;
+            radius=15;
+            animator=new ValueAnimator();
         }
         @Override
         protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
-            if(x>getRight()-20)x=getRight()-20;
-            else if(x<=getLeft()+20) {
-                x = getLeft() + 20;
+            if(x>getRight()-30)x=getRight()-30;
+            else if(x<=getLeft()+30) {
+                x = getLeft() + 30;
                 paint.setColor(getResources().getColor(R.color.gray));
                 paint.setStyle(Paint.Style.STROKE);
                 paint.setStrokeWidth(5);
+                bg.setColor(getResources().getColor(R.color.gray));
+                bg.setAlpha(80);
             }else{
                 paint.setColor(getResources().getColor(R.color.blue));
                 paint.setStyle(Paint.Style.FILL);
+                bg.setColor(getResources().getColor(R.color.blue));
+                bg.setAlpha(80);
 
             }
-            canvas.drawCircle(x, (getTop()+getBottom())/2 , 15, paint);
+            canvas.drawCircle(x, (getTop()+getBottom())/2 , radius2, bg);
+
+            canvas.drawCircle(x, (getTop()+getBottom())/2 , radius, paint);
         }
 
+        public void scalel() {
+            temp=true;
+        }
+        public void scales() {
+            temp=false;
+        }
+        public void startAnimation(int duration){
+            ValueAnimator v=ValueAnimator.ofInt(0,100);
+            v.setStartDelay(0);
+            v.setDuration(duration);
+            v.addUpdateListener(this);
+            v.start();
+        }
+
+        @Override
+        public void onAnimationUpdate(ValueAnimator animation) {
+            int test = (int) animation.getAnimatedValue();
+            if(temp){
+                radius=15+(15*test)/100;
+                radius2=15+(35*test)/100;
+            }else{
+                radius2=50-(35*test)/100;
+                radius=30-(15*test)/100;
+            }
+            invalidate();
+        }
     }
 }
